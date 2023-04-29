@@ -33,7 +33,7 @@ def generate_nav_graph():
                     ))
 
 def populate_nave_graph(id, package, label, layout, actions):
-    return f'<fragment\n\tandroid:id="@+id/{id}Screen"\n\tandroid:name="{package}"\n\tandroid:label="{label}"\n\ttools:layout="{layout}">\n {actions} \n</fragment>' + '\n'
+    return f'<fragment\n\tandroid:id="@+id/{id}Screen"\n\tandroid:name="{package}"\n\tandroid:label="{label}"\n\ttools:layout="{layout}">\n {actions} \n</fragment>' + '\n\n'
 
 def first_char_to_lower(s):
     if not s:
@@ -116,13 +116,13 @@ def get_screen_actions(root, file):
                 action_destination = f'{first_char_to_lower(destination_final)}Screen'
 
                 # Generate the output data
-                output_data_format = '<action\n' \
+                output_data_format = '\n<action\n' \
                             '\tandroid:id="@+id/{}"\n' \
                             '\tapp:destination="@id/{}"\n' \
                             '\tapp:enterAnim="@anim/slide_in_right"\n' \
                             '\tapp:exitAnim="@anim/slide_out_left"\n' \
                             '\tapp:popEnterAnim="@anim/slide_in_left"\n' \
-                            '\tapp:popExitAnim="@anim/slide_out_right" />\n\n' \
+                            '\tapp:popExitAnim="@anim/slide_out_right" />\n' \
                             .format(action_id, action_destination)
 
                 output_data += output_data_format
