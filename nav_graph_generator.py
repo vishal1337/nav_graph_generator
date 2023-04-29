@@ -13,11 +13,10 @@ default_layout = '@layout/fragment_business_loans_landing'
 java_path = f"/Users/{getpass.getuser()}/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/"
 
 def main():
-    generateTemplate()
-    # roughWork()
+    generate_nav_graph()
 
 #### Business Logic [start]
-def generateTemplate():
+def generate_nav_graph():
     # open the output file in write mode
     with open(output_file_path, 'w') as output_file:
         # loop through all files in the directory and its subdirectories
@@ -25,15 +24,16 @@ def generateTemplate():
             # write the full path of each file to the output file
             for file in files:
                 if file.endswith('Fragment.kt'):
-                    output_file.write(populateTemplate(
+                    output_file.write(populate_nave_graph(
                         first_char_to_lower(remove_substring(file,"Fragment.kt")),
                         get_organised_path(os.path.join(root, remove_substring(file,".kt"))),
                         get_label(root, file),
-                        get_layout_file_name(root, file)
+                        get_layout_file_name(root, file),
+                        get_screen_actions(root, file)
                     ))
 
-def populateTemplate(id, package, label, layout):
-    return f'<fragment\n\tandroid:id="@+id/{id}Screen"\n\tandroid:name="{package}"\n\tandroid:label="{label}"\n\ttools:layout="{layout}">\n</fragment>' + '\n'
+def populate_nave_graph(id, package, label, layout, actions):
+    return f'<fragment\n\tandroid:id="@+id/{id}Screen"\n\tandroid:name="{package}"\n\tandroid:label="{label}"\n\ttools:layout="{layout}">\n {actions} \n</fragment>' + '\n'
 
 def first_char_to_lower(s):
     if not s:
@@ -67,8 +67,6 @@ def get_string_after_match_until(s, match_str, end_str):
 def get_label(root, file):
 
     pattern = "setTitle(R.string."  # The string to match
-    
-    print(pattern + " " + os.path.join(root,file))
 
     with open(os.path.join(root,file), "r") as infile:
         for line in infile:
@@ -76,7 +74,7 @@ def get_label(root, file):
                 return f'@string/{get_string_after_match_until(line, pattern, ")")}'
                 break
 
-    return "null"
+    return default_label
 
 def get_layout_file_name(root, file):
 
@@ -102,15 +100,36 @@ def get_layout_file_name(root, file):
 
     return 'null'
 
+def get_screen_actions(root, file):
+
+    pattern = re.compile(r'\w*Fragment.initiateFragment\w*')
+
+    output_data = ""
+
+    with open(os.path.join(root,file), "r") as file:
+        matches = pattern.findall(file.read())
+        if matches:
+            for destination in set(matches):
+                destination_final = destination.replace("Fragment.initiateFragment","")
+
+                action_id = f'navigateTo{destination_final}Screen'
+                action_destination = f'{first_char_to_lower(destination_final)}Screen'
+
+                # Generate the output data
+                output_data_format = '<action\n' \
+                            '\tandroid:id="@+id/{}"\n' \
+                            '\tapp:destination="@id/{}"\n' \
+                            '\tapp:enterAnim="@anim/slide_in_right"\n' \
+                            '\tapp:exitAnim="@anim/slide_out_left"\n' \
+                            '\tapp:popEnterAnim="@anim/slide_in_left"\n' \
+                            '\tapp:popExitAnim="@anim/slide_out_right" />\n\n' \
+                            .format(action_id, action_destination)
+
+                output_data += output_data_format
+    
+    return output_data
+
 #### Business Logic [end]
-
-
-#Rough Work. Todo : Remove me later
-
-def roughWork():
-    print("Something Important")
-
-#Rough Work. end.
 
 if __name__ == '__main__':
         main()
