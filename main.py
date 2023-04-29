@@ -1,13 +1,14 @@
 import os
+import getpass
 
-directory_path = '/Users/nbt1736/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/com/bnb/paynearby/fldgbusinessloans/centrum'  # replace with your directory path
+directory_path = f'/Users/{getpass.getuser()}/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/com/bnb/paynearby/fldgbusinessloans/centrum'  # replace with your directory path
 output_file_path = 'file.txt'  # replace with your desired output file path
 package_name = 'com.bnb.paynearby.fldgbusinessloans.centrum'  # replace with your desired output file path
 default_label = '@string/lbl_business_loans' # In Case it is same for all
 default_layout = '@layout/fragment_business_loans_landing'
 
 
-java_path = "/Users/nbt1736/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/"
+java_path = f"/Users/{getpass.getuser()}/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/"
 
 def main():
     generateTemplate()
