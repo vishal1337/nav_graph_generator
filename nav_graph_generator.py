@@ -1,24 +1,29 @@
 import os
 import getpass
 import re
+import fileinput
+
+
+package_name = 'com.bnb.paynearby.fldgbusinessloans.centrum'  # replace with your resective package name. Usually this is where all you Fragments will be.
 
 directory_path = f'/Users/{getpass.getuser()}/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/com/bnb/paynearby/fldgbusinessloans/centrum'
-directory_path_base = f'/Users/{getpass.getuser()}/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/com/bnb/paynearby/fldgbusinessloans/base/fragment' # all the base classes stay here
-output_file_path = 'nav_graph.txt'  # replace with your desired output file path
-package_name = 'com.bnb.paynearby.fldgbusinessloans.centrum'  # replace with your desired output file path
-default_label = '@string/lbl_business_loans' # In Case it is same for all
-default_layout = '@layout/fragment_business_loans_landing'
+directory_path_base = f'/Users/{getpass.getuser()}/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/com/bnb/paynearby/fldgbusinessloans/base/fragment' # In case some Fragment classes are using layouts from Base classes. Look in this directory for Base classes.
 
+output_file_path = f'/Users/{getpass.getuser()}/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/res/navigation/fldg_bl_nav_graph.xml'  # replace with your respective navgraph path and file name
 
-java_path = f"/Users/{getpass.getuser()}/Development/code/work/pnb-merchant-app-lending/fldgbusinessloans/src/main/java/"
+default_label = '@string/lbl_business_loans' # In Case, it is same for alL.
+default_layout = '@layout/fragment_business_loans_landing' # A generic layout used in case of no layout found while generating nav grah
 
 def main():
-    generate_nav_graph()
+    generate_nav_graph() # To generate navigation graph
+    insert_nav_controller_code() # To generate boilerplate in Fragment classes
 
 #### Business Logic [start]
 def generate_nav_graph():
     # open the output file in write mode
     with open(output_file_path, 'w') as output_file:
+        #Add Header
+        output_file.write(get_nav_graph_header())
         # loop through all files in the directory and its subdirectories
         for root, dirs, files in os.walk(directory_path):
             # write the full path of each file to the output file
@@ -31,9 +36,40 @@ def generate_nav_graph():
                         get_layout_file_name(root, file),
                         get_screen_actions(root, file)
                     ))
+        output_file.write(get_nav_graph_footer())
+
+def insert_nav_controller_code():
+    for root, _, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith("Fragment.kt"):
+                with fileinput.input(os.path.join(root, file), inplace=True) as f:
+                    for line in f:
+                        naviagtion_path = ""
+                        if re.search(r"Fragment.initiateFragment\(", line):
+                            words = line.strip().split()
+                            for word in words:
+                                if "Fragment.initiateFragment(" in word:
+                                    index = word.find("Fragment.initiateFragment")
+                                    naviagtion_path = f'{line[:len(line) - len(line.lstrip())]}//findNavController().navigate({file.replace(".kt", "")}Directions.navigateTo{word[:index]}Screen())\n'
+                        line = naviagtion_path + line
+                        print(line, end='')
+
+def replace_word_in_file(file_path, old_word, new_word):
+    with open(file_path, 'r') as f:
+        file_content = f.read()
+    file_content = file_content.replace(old_word, new_word)
+    with open(file_path, 'w') as f:
+        f.write(file_content)
 
 def populate_nave_graph(id, package, label, layout, actions):
-    return f'<fragment\n\tandroid:id="@+id/{id}Screen"\n\tandroid:name="{package}"\n\tandroid:label="{label}"\n\ttools:layout="{layout}">\n {actions} \n</fragment>' + '\n\n'
+    return f'\t<fragment\n' \
+        '\t\tandroid:id="@+id/{}Screen"\n' \
+        '\t\tandroid:name="{}"\n' \
+        '\t\tandroid:label="{}"\n'\
+        '\t\ttools:layout="{}">\n' \
+        '{} \n' \
+        '\t</fragment>\n\n' \
+        .format(id, package, label, layout, actions)
 
 def first_char_to_lower(s):
     if not s:
@@ -116,18 +152,29 @@ def get_screen_actions(root, file):
                 action_destination = f'{first_char_to_lower(destination_final)}Screen'
 
                 # Generate the output data
-                output_data_format = '\n<action\n' \
-                            '\tandroid:id="@+id/{}"\n' \
-                            '\tapp:destination="@id/{}"\n' \
-                            '\tapp:enterAnim="@anim/slide_in_right"\n' \
-                            '\tapp:exitAnim="@anim/slide_out_left"\n' \
-                            '\tapp:popEnterAnim="@anim/slide_in_left"\n' \
-                            '\tapp:popExitAnim="@anim/slide_out_right" />\n' \
+                output_data_format = '\n\t\t<action\n' \
+                            '\t\t\tandroid:id="@+id/{}"\n' \
+                            '\t\t\tapp:destination="@id/{}"\n' \
+                            '\t\t\tapp:enterAnim="@anim/slide_in_right"\n' \
+                            '\t\t\tapp:exitAnim="@anim/slide_out_left"\n' \
+                            '\t\t\tapp:popEnterAnim="@anim/slide_in_left"\n' \
+                            '\t\t\tapp:popExitAnim="@anim/slide_out_right" />\n' \
                             .format(action_id, action_destination)
 
                 output_data += output_data_format
     
     return output_data
+
+def get_nav_graph_header():
+    return '<?xml version="1.0" encoding="utf-8"?>\n' \
+        '<navigation xmlns:android="http://schemas.android.com/apk/res/android"\n' \
+        '\txmlns:app="http://schemas.android.com/apk/res-auto"\n' \
+        '\txmlns:tools="http://schemas.android.com/tools"\n' \
+        '\tandroid:id="@+id/<insert id here >"\n' \
+        '\tapp:startDestination="@id/insert destination here">\n'
+
+def get_nav_graph_footer():
+    return f'\n</navigation>'
 
 #### Business Logic [end]
 
